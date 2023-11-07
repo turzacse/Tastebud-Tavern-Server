@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -68,6 +68,25 @@ async function run() {
       res.send(result);
     })
 
+    app.put('/allfoods/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const options = { upset: true };
+      const updatedProduct = req.body;
+      const food = {
+        $set: {
+          foodName: updatedProduct.foodName,
+          foodCategory: updatedProduct.foodCategory,
+          quantity: updatedProduct.quantity,
+          origin: updatedProduct.origin,
+          price: updatedProduct.price,
+          descriptions: updatedProduct.descriptions,
+        }
+      }
+      const result = await foodCollection.updateOne(filter, food, options);
+      res.send(result);
+    })
+
     //order related API
     app.get('/order', async(req, res) =>{
       const order = orderCollection.find();
@@ -79,6 +98,13 @@ async function run() {
       const order = req.body;
       console.log(order);
       const result = await orderCollection.insertOne(order);
+      res.send(result);
+    })
+
+    app.delete('/order/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await orderCollection.deleteOne(query);
       res.send(result);
     })
 

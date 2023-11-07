@@ -27,7 +27,7 @@ async function run() {
     await client.connect();
 
     const userCollection = client.db('tastebudDB').collection('users');
-    const foodCollection = client.db('tastebudDB').collection('foods');
+    const foodCollection = client.db('tastebudDB').collection('allfoods');
 
     //user related api
     app.get('/users', async(req, res) =>{
@@ -43,14 +43,25 @@ async function run() {
     })
 
     //food related API
-    app.get('/foods', async(req,res) =>{
-      const foods = await foodCollection.find().toArray();
-      res.send(foods);
-    })
+    // app.get('/foods', async(req,res) =>{
+    //   const foods = await foodCollection.find().toArray();
+    //   res.send(foods);
+    // })
+    // app.get('/allfoods', async(req, res) =>{
+    //   const cursor = foodCollection.find();
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // })
 
-    app.post('/foods', async(req, res)=>{
+    app.get('/allfoods', async(req,res)=>{
+      const food = foodCollection.find();
+      const result = await food.toArray();
+      res.send(result);
+    })
+  
+    app.post('/allfoods', async(req, res)=>{
       const food = req.body;
-      console.log()
+      console.log(food);
       const result = await foodCollection.insertOne(food);
       res.send(result);
     })

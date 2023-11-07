@@ -69,7 +69,11 @@ async function run() {
     })
 
     //order related API
-    
+    app.get('/order', async(req, res) =>{
+      const order = orderCollection.find();
+      const result = await order.toArray();
+      res.send(result);
+    })
 
     app.post('/order', async(req,res) => {
       const order = req.body;

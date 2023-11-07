@@ -29,6 +29,8 @@ async function run() {
     const userCollection = client.db('tastebudDB').collection('users');
     const foodCollection = client.db('tastebudDB').collection('allfoods');
 
+    const orderCollection = client.db('tastebudDB').collection('order');
+
     //user related api
     app.get('/users', async(req, res) =>{
       const users = await userCollection.find().toArray();
@@ -63,6 +65,16 @@ async function run() {
       const food = req.body;
       console.log(food);
       const result = await foodCollection.insertOne(food);
+      res.send(result);
+    })
+
+    //order related API
+    
+
+    app.post('/order', async(req,res) => {
+      const order = req.body;
+      console.log(order);
+      const result = await orderCollection.insertOne(order);
       res.send(result);
     })
 

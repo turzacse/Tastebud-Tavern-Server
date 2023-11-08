@@ -9,15 +9,17 @@ const port = process.env.PORT || 5000;
 
 //middleware
 app.use(cors({
-  origin: [
-    'http://localhost:5173'
-  ],
+  origin: "*",
   credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
 
-
+// [
+//   'https://tastebud-tavern.web.app',
+//   'https://tastebud-tavern.firebaseapp.com',
+//   '*'
+// ]
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bnzewy6.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -151,8 +153,25 @@ async function run() {
     app.post('/order', async(req,res) => {
       const order = req.body;
       console.log(order);
+
+      // added 
+      await foodCollection.updateOne(
+        {_id: new ObjectId(order.foodID)},
+        { $inc: { ordersCount: 1}}
+      );
+      //
       const result = await orderCollection.insertOne(order);
       res.send(result);
+    })
+
+    app.get('/topfoods', async(req, res) =>{
+      const topFood = await foodCollection
+      .find()
+      .sort({ ordersCount: -1 })
+      .limit(6)
+      .toArray();
+
+      res.send(topFood);
     })
 
     app.delete('/order/:id', async(req, res) =>{
@@ -184,3 +203,5 @@ app.get('/', (req, res)=>{
 app.listen(port, () =>{
     console.log(`server is runnin on port: ${port}`);
 })
+
+module.exports = app;

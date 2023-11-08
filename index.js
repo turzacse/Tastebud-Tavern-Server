@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const cookieParser = require('cookie-parser');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -14,6 +15,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bnzewy6.mongodb.net/?retryWrites=true&w=majority`;
@@ -26,6 +28,28 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+//my middlewares 
+const logger = (req, res, next) =>{
+  console.log('loginfo : ', req.method, req.url);
+  next();
+}
+
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  // console.log('token in the middleware', token);
+  // next();
+  if(!token) {
+    return res.status(401).send({message: 'unauthorized access'})
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if(err) {
+      return res.status(401).send({message: 'unauthorized access'})
+    }
+    req.user = decoded;
+    next();
+  })
+}
 
 async function run() {
   try {
@@ -50,6 +74,14 @@ async function run() {
       })
       .send({success: true});
     })
+
+    app.post('/logout', async(req, res) =>{
+      const logged = req.body;
+      console.log('logging out', logged);
+      res.clearCookie('token', {maxAge: 0}).send({success: true})
+    })
+
+
     //user related api
     app.get('/users', async(req, res) =>{
       const users = await userCollection.find().toArray();
@@ -107,7 +139,10 @@ async function run() {
     })
 
     //order related API
-    app.get('/order', async(req, res) =>{
+    app.get('/order', logger, verifyToken, async(req, res) =>{
+      console.log(req.body);
+      console.log('owener info: ', req.user);
+      //console.log('cookkkkkiee', req.cookies);
       const order = orderCollection.find();
       const result = await order.toArray();
       res.send(result);
